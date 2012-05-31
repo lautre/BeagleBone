@@ -552,7 +552,7 @@ class Input(Gpio):
         while (time()-starttime)<=timeout:
             val=self.value
             yield val
-        return -1
+        return
 
     def rising(self,timeout=10):
         '''poll for rising condition'''
@@ -588,7 +588,7 @@ class Sync(object):
 
 class I2C(object):
 
-# TODO : verify availability of pins and file system
+# TODO : verify availability of pins and file system and configure them is needed
 #    IOCTL_I2C_SLAVE=0x0703
 
     def __init__(self,port=2,addr=0x20):
@@ -615,3 +615,42 @@ class I2C(object):
             if len(result)==1:
                 result=result[0]
         return result
+
+class Adc(object):
+
+    files={33:'ain4',35:'ain6',36:'ain5',37:'ain2',38:'ain3',39:'ain0',40:'ain1'}
+
+    def __init__(self,connector='P9',pin=39):
+        self.filename='/sys/devices/platform/omap/tsc/'+self.files[pin]
+        self.gain=1
+        self.offset=0
+        self.unit='V'
+        self.rate=1000
+        self.timeout=10
+        return
+
+    def __repr__(self):
+        return '%d'%self.value
+
+    def __iter__(self):
+        while 1:
+            yield self.value
+
+    @property
+    def value(self):
+        with open(self.filename,'r') as f:
+            result=f.read()
+            result=(float(result)/4096.)*1.8*self.gain-self.offset
+        return result
+
+
+
+if __name__=='__main__':
+
+    a=Adc(pin=38)
+    print a.value
+
+
+
+
+
