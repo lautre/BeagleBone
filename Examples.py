@@ -40,16 +40,15 @@ print p.mux.mode
 
 #Digital IO examples
 #Generic IO
-g=GPIO('P8',3)#Generic IO, constructor take care of initialization : retrieve sysfs filename,
+g=Gpio('P8',3)#Generic IO, constructor take care of initialization : retrieve sysfs filename,
 #export the pin, handle all related files direction, value, edge
 #all files are open and closed at each access
 #if unable to export the pin, will unexport and export again (works as by now)
 print g.direction
 #=>
-print g.edge
-#=>
 print g.value
 #=>
+g.unexport
 
 o=Output('P8',3)# digital output, inherit from GPIO, constructor will try to retrieve configuration informations from
 #the relevant files : mux mode, mux direction

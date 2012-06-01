@@ -442,16 +442,14 @@ class Gpio(Pin):
 
     @property
     def value(self):
-        fw=file(self.filename+'/value','r')
-        result=fw.read()
-        fw.close()
+        with file(self.filename+'/value','r') as fw:
+            result=fw.read()
         return int(result)
     @value.setter
     def value(self,value):
         '''1/0'''
-        fw=file(self.filename+'/value','w')
-        result=fw.write('%d'%value)
-        fw.close()
+        with file(self.filename+'/value','w')as fw:
+            result=fw.write('%d'%value)
         return result
 
     @property
@@ -491,6 +489,7 @@ class Output(Gpio):
         self.mux.pull=0
         self.mux.up=0
         self.mux.input=0
+        self.direction='out'
         return
 
     @property
@@ -551,6 +550,7 @@ class Input(Gpio):
         self.mux.pull=0
         self.mux.up=0
         self.mux.input=1
+        self.direction='in'
         return
 
     def poll(self,timeout=10):
