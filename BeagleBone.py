@@ -617,16 +617,23 @@ class I2C(object):
         return result
 
 class Adc(object):
-
+    '''maximum acquisition frequency is about 5KHz'''
     files={33:'ain4',35:'ain6',36:'ain5',37:'ain2',38:'ain3',39:'ain0',40:'ain1'}
-
     def __init__(self,connector='P9',pin=39):
-        self.filename='/sys/devices/platform/omap/tsc/'+self.files[pin]
+        self.filename='/sys/devices/platform/omap/tsc/ain%d'%pin
         self.gain=1
         self.offset=0
         self.unit='V'
-        self.rate=1000
+        self.rate=0
         self.timeout=10
+        self._buff=[]
+        self.timing=[]
+        self.samples=1
+        self._average=0
+        self._rms=0
+        self._ac=0
+        self._cross=[]
+        self._period=0
         return
 
     def __repr__(self):
@@ -639,16 +646,83 @@ class Adc(object):
     @property
     def value(self):
         with open(self.filename,'r') as f:
-            result=f.read()
-            result=(float(result)/4096.)*1.8*self.gain-self.offset
+            result=f.read(4)
+            result= ''.join([x for x in result if ord(x)!=0])
+            result=int(result)
         return result
 
+    @property
+    def buffer(self):
+        return self._buff
+    @buffer.setter
+    def buffer(self,samples):
+        self.samples=samples
+        self._buff=[]
+        self._timing=[]
+        t0=time()
+        for i in range(samples):
+            with open(self.filename,'r') as f:
+                self.timing.append(time()-t0)
+                result=f.read(4)
+                result =''.join([x for x in result if ord(x)!=0])
+                self._buff.append(int(result))
+                if self.rate:
+                    sleep(1./self.rate)
+        self._average=0
+        self._rms=0
+        self._ac=0
+        self._cross=[]
+        return
+
+    @property
+    def average(self):
+        if not self._average:
+            self._average=sum(self.buffer)/self.samples
+        return self._average
+
+    @property
+    def ac(self):
+        if not self._ac:
+            self._ac=[x-self.average for x in self.buffer]
+        return self._ac
+
+    @property
+    def cross(self):
+        if not self._cross:
+            for i,j in enumerate(self.ac[:-1]):
+                if j*self.ac[i+1]<=0:
+                    self._cross.append(self.timing[i])
+        return self._cross
+
+    @property
+    def period(self):
+        if not self._period:
+            temp=[]
+            for i,j in enumerate(self.cross[:-1]):
+                temp.append(abs(j-self.cross[i+1]))
+            self._period=sum(temp)/len(temp)*2
+        return self._period
+
+    @property
+    def frequency(self):
+        return 1./self.period
+
+    @property
+    def rms(self):
+        if not self._rms:
+            self._rms=sqrt(sum([x*x for x in self.ac])/self.samples)
+        return self._rms
 
 
 if __name__=='__main__':
 
-    a=Adc(pin=38)
-    print a.value
+    a=Adc(pin=7)
+    t0=time()
+    a.buffer=2000
+    print a.average
+    print a.period
+    print a.frequency
+    print a.rms
 
 
 
