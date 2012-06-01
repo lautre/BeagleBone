@@ -251,7 +251,7 @@ class Pin(object):
                     },
                'P9':{1:'GND',
                     }}
-# TODO : add all pins
+# TODO : add all pins names
 
     def __init__(self,connector,pin):
         '''connector : P8/P9
@@ -301,6 +301,9 @@ class Pwm(Pin):
     def __idiv__(self,value):
         self.duty=self.duty/value
         return
+
+    def __repr__(self):
+        return 'Pwm : %s, freq : %d, duty cycle : %d'%(self.name,self.frequency,self.duty)
 
     @property
     def request(self):
@@ -504,8 +507,11 @@ class Output(Gpio):
         self.value=abs(self.value-1)
         return
 
+    @property
+    def trigger(self):
+        self.toggle()
     def trigger(self,duration=0.001):
-        '''toggle pin, lauch timer for duration and toggle again, as it is a thread, won't block the execution'''
+        '''toggle pin, launch timer for duration and toggle again, as it is a thread, won't block the execution'''
         self.toggle()
         Timer(duration,self.toggle).start()
         return
@@ -517,27 +523,30 @@ class Output(Gpio):
             once defined, the pulse train will live on itself, as these are Timer (see threading module)
             beware : program must last longer than the whole duration of the train, otherwise, the pwm file will be closed on exit of the main program
             '''
-        self.value=state
-        duration=sum(liste)
+        self.value=state#set initial state
+        duration=sum(liste)#overall duration of the pulse train
         for i in range(repeat):
             delay=0
             for t in liste:
-                delay+=t
+                delay+=t#delay before launching timer
                 Timer(i*duration+delay,self.toggle).start()
         return duration*repeat
 
-    def clock(self,period,duration):
-        start=time()
-        while (time()-start)<=duration:
-            self.toggle()
-            sleep(period)
+    def clock(self,period,duration,delay=0):#generate a clock of period and duration starting with delay
+        def run():
+            start=time()
+            while (time()-start)<=duration:
+                self.toggle()
+                sleep(period)
+            return
+        Timer(delay,run).start()
         return
 
 class Input(Gpio):
 
     def __init__(self,port,pin):
         super(Input,self).__init__(port,pin)
-        #configuration of the mux mode is always 7, pullup and polarity may be changed anytime
+        #configuration of the mux mode is always 7, pullup and polarity may be changed anytime later
         self.mux.mode=7
         self.mux.pull=0
         self.mux.up=0
@@ -577,7 +586,7 @@ class Input(Gpio):
         return 1
 
 class Sync(object):
-
+    '''Synchronise an input event with an output event'''
     def __init__(self,input,output,edge=0,delay=0,pol=0):
         self.input=input
         self.output=output

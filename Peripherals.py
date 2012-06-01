@@ -4,7 +4,7 @@ Created on Thu May 31 16:14:31 2012
 
 @author: Laurent Trembloy
 """
-from BeaglBone import *
+from BeagleBone import *
 
 class PCA9554(I2C):
 
@@ -14,14 +14,11 @@ class PCA9554(I2C):
 
     def __getitem__(self,index):
         inp=bin(self.input)
-        print inp
         inp=[int(x) for x in inp[2:]]
-        print inp
         if isinstance(index,slice):
            while len(inp)<8:
                inp.insert(0,0)
         inp.reverse()
-        print inp
         return inp[index]
 
     def __setitem__(self,index,value):
