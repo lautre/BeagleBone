@@ -142,6 +142,16 @@ class Demux(object):
         self._enable.off
         return
 
+class Sync(object):
+    '''Synchronise an input event with an output event'''
+    def __init__(self,input,output,edge=0,delay=0,pol=0):
+        self.input=input
+        self.output=output
+        self.delay=delay
+        self.edge=edge
+        self.pol=pol
+        return
+
 # TODO : tests for each class
 
 if __name__=='__main__':

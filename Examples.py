@@ -69,7 +69,6 @@ o.clock(2,5,0)#will generate a 0.5Hz symetric clock for 5 sec, wait 5 sec before
 sleep(5)
 
 
-
 #test PCA9554 I2C port extender
 
 p=PCA9554(2,0)#I2C2, A0=0,A1=0,A2=0

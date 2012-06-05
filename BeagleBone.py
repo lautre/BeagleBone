@@ -26,7 +26,7 @@ from mmap import mmap
 from fcntl import ioctl
 
 class Register(object):
-    '''Memory Map acces to the register of the BeagleBone Processor'''
+    '''Memory Map acces to the registers of the BeagleBone Processor'''
     mmapoffset=0x44c00000             #MMAP_OFFSET
     mmapsize=  0x48ffffff-mmapoffset  #MMAP_SIZE
     formats={32:'<L',16:'<H'}         #32 or 16 bits
@@ -189,7 +189,7 @@ class Signals(object):
 # TODO : Handle I2C, SPI and other mode
 
     class Signal(object):
-
+        '''Cosmetic class to handle only dot notation'''
         def __init__(self,name,mode,number=0):
             '''
             name : name to be used for filesystem access
@@ -531,8 +531,10 @@ class Output(Gpio):
                 Timer(i*duration+delay,self.toggle).start()
         return duration*repeat
 
-    def clock(self,period,duration,delay=0):#generate a clock of period and duration starting with delay
+    def clock(self,period,duration,delay=0):
+        '''generate a clock of period and duration starting with delay, run as Timer()'''
         def run():
+            '''function will be used by Timer()'''
             start=time()
             while (time()-start)<=duration:
                 self.toggle()
@@ -584,16 +586,6 @@ class Input(Gpio):
             if time()-starttime>timeout:
                 return 0
         return 1
-
-class Sync(object):
-    '''Synchronise an input event with an output event'''
-    def __init__(self,input,output,edge=0,delay=0,pol=0):
-        self.input=input
-        self.output=output
-        self.delay=delay
-        self.edge=edge
-        self.pol=pol
-        return
 
 class I2C(object):
 
@@ -651,6 +643,9 @@ class Adc(object):
     def __iter__(self):
         while 1:
             yield self.value
+
+    def check(self,value):
+
 
     @property
     def value(self):
